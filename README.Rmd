@@ -23,7 +23,7 @@ knitr::opts_chunk$set(
 <!-- badges: start --> 
 <!-- badges: end -->
 
-The kcHARS R package provides functions for reading and working with eHARS data.
+The kcHARS R package provides functions for Public Health--Seattle & King County epidemiologists to use for reading and working with eHARS data.
 
 ## Installation 
 
@@ -38,10 +38,10 @@ pak::pak("rlechtenberg/kcHARS")
 
 kcHARS assumes eHARS SAS datasets reside in "R:/Epi/EXTRA SPACE/eHARS/Full
 eHARS" (what `ehars_root_dir()` returns). Specifically, it assumes that the
-./Archive subdirectory contains folders named 'YYYY-MM-DD', each
+Archive/ subdirectory contains folders named 'YYYY-MM-DD', each
 containing an extract from a different date, and that each of those contains a
-./person_sas7bdat subdirectory containing eHARS' person-based dataset (AKA the
-person view) and a ./document_sas7bdat subdirectory containing the
+person_sas7bdat/ subdirectory containing eHARS' person-based dataset (AKA the
+person view) and a document_sas7bdat/ subdirectory containing the
 document-based datasets. When you load and attach the kcHARS package using the
 `library()` function, R identifies the date of the most recent archived eHARS
 extract, stores it in a global option named kcHARS.ehars_dt, and notifies you of
@@ -56,9 +56,9 @@ getOption("kcHARS.ehars_dt")
 
 # get max document enter_dt
 ehars_doc("document", col_select = c("enter_dt")) |>
-  dplyr::filter(enter_dt == max(enter_dt)) |>
-  dplyr::distinct() |>
-  dplyr::mutate(enter_dt_num = ehars_dt.as.Date(enter_dt)) 
+  dplyr::pull(enter_dt) |>
+  max() |>
+  ehars_dt.as.Date()
 ```
 
 If you want to use the data from a different/older extract, you can simply
@@ -73,9 +73,9 @@ getOption("kcHARS.ehars_dt")
 
 # get max document enter_dt
 ehars_doc("document", col_select = c("enter_dt")) |>
-  dplyr::filter(enter_dt == max(enter_dt)) |>
-  dplyr::distinct() |>
-  dplyr::mutate(enter_dt_num = ehars_dt.as.Date(enter_dt))
+  dplyr::pull(enter_dt) |>
+  max() |>
+  ehars_dt.as.Date()
 ```
 
 

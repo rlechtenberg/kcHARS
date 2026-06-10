@@ -9,8 +9,8 @@ kcHARS
 
 <!-- badges: end -->
 
-The kcHARS R package provides functions for reading and working with
-eHARS data.
+The kcHARS R package provides functions for Public Health–Seattle & King
+County epidemiologists to use for reading and working with eHARS data.
 
 ## Installation
 
@@ -26,17 +26,16 @@ pak::pak("rlechtenberg/kcHARS")
 
 kcHARS assumes eHARS SAS datasets reside in “R:/Epi/EXTRA
 SPACE/eHARS/Full eHARS” (what `ehars_root_dir()` returns). Specifically,
-it assumes that the ./Archive subdirectory contains folders named
+it assumes that the Archive/ subdirectory contains folders named
 ‘YYYY-MM-DD’, each containing an extract from a different date, and that
-each of those contains a ./person_sas7bdat subdirectory containing
-eHARS’ person-based dataset (AKA the person view) and a
-./document_sas7bdat subdirectory containing the document-based datasets.
-When you load and attach the kcHARS package using the `library()`
-function, R identifies the date of the most recent archived eHARS
-extract, stores it in a global option named kcHARS.ehars_dt, and
-notifies you of it via the package start-up message. Calls to
-`ehars_person()` and `ehars_doc()` will then read the requested data
-from the associated folder.
+each of those contains a person_sas7bdat/ subdirectory containing eHARS’
+person-based dataset (AKA the person view) and a document_sas7bdat/
+subdirectory containing the document-based datasets. When you load and
+attach the kcHARS package using the `library()` function, R identifies
+the date of the most recent archived eHARS extract, stores it in a
+global option named kcHARS.ehars_dt, and notifies you of it via the
+package start-up message. Calls to `ehars_person()` and `ehars_doc()`
+will then read the requested data from the associated folder.
 
 ``` r
 library(kcHARS)
@@ -49,13 +48,10 @@ getOption("kcHARS.ehars_dt")
 
 # get max document enter_dt
 ehars_doc("document", col_select = c("enter_dt")) |>
-  dplyr::filter(enter_dt == max(enter_dt)) |>
-  dplyr::distinct() |>
-  dplyr::mutate(enter_dt_num = ehars_dt.as.Date(enter_dt)) 
-#> # A tibble: 1 × 2
-#>   enter_dt enter_dt_num
-#>   <chr>    <date>      
-#> 1 20260605 2026-06-05
+  dplyr::pull(enter_dt) |>
+  max() |>
+  ehars_dt.as.Date()
+#> [1] "2026-06-05"
 ```
 
 If you want to use the data from a different/older extract, you can
@@ -71,13 +67,10 @@ getOption("kcHARS.ehars_dt")
 
 # get max document enter_dt
 ehars_doc("document", col_select = c("enter_dt")) |>
-  dplyr::filter(enter_dt == max(enter_dt)) |>
-  dplyr::distinct() |>
-  dplyr::mutate(enter_dt_num = ehars_dt.as.Date(enter_dt))
-#> # A tibble: 1 × 2
-#>   enter_dt enter_dt_num
-#>   <chr>    <date>      
-#> 1 20251223 2025-12-23
+  dplyr::pull(enter_dt) |>
+  max() |>
+  ehars_dt.as.Date()
+#> [1] "2025-12-23"
 ```
 
 <!-- You'll still need to render `README.Rmd` regularly, to keep `README.md` -->
