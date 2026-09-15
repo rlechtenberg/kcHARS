@@ -34,24 +34,25 @@ subdirectory containing the document-based datasets. When you load and
 attach the kcHARS package using the `library()` function, R identifies
 the date of the most recent archived eHARS extract, stores it in a
 global option named kcHARS.ehars_dt, and notifies you of it via the
-package start-up message. Calls to `ehars_person()` and `read_ehars_doc()`
-will then read the requested data from the associated folder.
+package start-up message. Calls to `read_ehars_person()` and
+`read_ehars_doc()` will then read the requested data from the associated
+folder.
 
 ``` r
 library(kcHARS)
-#> Using eHARS data dated 2026-06-08. 
+#> Using eHARS data dated 2026-09-15. 
 #> (You can specify a different date using `options(kcHARS.ehars_dt = '<YYYY-MM-DD>')`.
 
 # print date of eHARS data being used
 getOption("kcHARS.ehars_dt")
-#> [1] "2026-06-08"
+#> [1] "2026-09-15"
 
 # get max document enter_dt
 read_ehars_doc("document", col_select = c("enter_dt")) |>
   dplyr::pull(enter_dt) |>
   max() |>
   ehars_dt.as.Date()
-#> [1] "2026-06-05"
+#> [1] "2026-09-14"
 ```
 
 If you want to use the data from a different/older extract, you can
