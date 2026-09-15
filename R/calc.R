@@ -53,13 +53,32 @@ calc_gender <- function(
           LF_GENDER %in% c('NB', 'GQ', 'O') |
           dplyr::coalesce(LF_GENDER_OTHER, "") != "" ~ 'AD',
         TRUE ~ NA_character_
-      )
+      ),
+      gender = dplyr::coalesce(transgender_ever, birth_sex) |>
+        dplyr::recode_values(
+          "M" ~ "M",
+          "F" ~ "F",
+          "MF" ~ "MF",
+          "FM" ~ "FM",
+          "AD" ~ "AD",
+          default = NA_character_
+        ) |>
+        labelled::labelled(
+          labels = c(
+            "Cisgender Man" = "M",
+            "Cisgender Woman" = "F",
+            "Transgender Woman" = "MF",
+            "Transgender Man" = "FM",
+            "Another Gender Identity" = "AD"
+          )
+        ) |>
+        labelled::set_variable_labels("Gender")
     )
 
   if (n_cat == 3) {
     y <- y |>
       dplyr::mutate(
-        gender = dplyr::coalesce(transgender_ever, birth_sex) |>
+        gender = gender |>
           dplyr::recode_values(
             "M" ~ "M",
             "F" ~ "F",
@@ -73,29 +92,6 @@ calc_gender <- function(
               "Cisgender Man" = "M",
               "Cisgender Woman" = "F",
               "Gender Diverse" = "AD"
-            )
-          ) |>
-          labelled::set_variable_labels("Gender")
-      )
-  } else if (n_cat == 5) {
-    y <- y |>
-      dplyr::mutate(
-        gender = dplyr::coalesce(transgender_ever, birth_sex) |>
-          dplyr::recode_values(
-            "M" ~ "M",
-            "F" ~ "F",
-            "MF" ~ "MF",
-            "FM" ~ "FM",
-            "AD" ~ "AD",
-            default = NA_character_
-          ) |>
-          labelled::labelled(
-            labels = c(
-              "Cisgender Man" = "M",
-              "Cisgender Woman" = "F",
-              "Transgender Woman" = "MF",
-              "Transgender Man" = "FM",
-              "Another Gender Identity" = "AD"
             )
           ) |>
           labelled::set_variable_labels("Gender")
