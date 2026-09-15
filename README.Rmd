@@ -45,7 +45,7 @@ person view) and a document_sas7bdat/ subdirectory containing the
 document-based datasets. When you load and attach the kcHARS package using the
 `library()` function, R identifies the date of the most recent archived eHARS
 extract, stores it in a global option named kcHARS.ehars_dt, and notifies you of
-it via the package start-up message. Calls to `ehars_person()` and `ehars_doc()`
+it via the package start-up message. Calls to `read_ehars_person()` and `read_ehars_doc()`
 will then read the requested data from the associated folder.
 
 ```{r example}
@@ -55,7 +55,7 @@ library(kcHARS)
 getOption("kcHARS.ehars_dt")
 
 # get max document enter_dt
-ehars_doc("document", col_select = c("enter_dt")) |>
+read_ehars_doc("document", col_select = c("enter_dt")) |>
   dplyr::pull(enter_dt) |>
   max() |>
   ehars_dt.as.Date()
@@ -72,7 +72,7 @@ options(kcHARS.ehars_dt = "2025-12-30")
 getOption("kcHARS.ehars_dt")
 
 # get max document enter_dt
-ehars_doc("document", col_select = c("enter_dt")) |>
+read_ehars_doc("document", col_select = c("enter_dt")) |>
   dplyr::pull(enter_dt) |>
   max() |>
   ehars_dt.as.Date()

@@ -1,3 +1,20 @@
+#' Assert a vector contains eHARS-tyle dates (YYYYMMDD with .. for missing date
+#' parts)
+#'
+#' @param x A vector
+#'
+#' @returns A single boolean value indicating whether all elements of `x` are
+#'   eHARS dates
+#' @export
+#'
+#' @examples
+#' is.ehars_dt(c("20260101", "202601..", "2026....", "........")) # TRUE
+#' is.ehars_dt(c("20260..1")) # NOTE: ignores misplaced .. (since these do occur in eHARS on rare occasions)
+#' is.ehars_dt(c("2026-01-01", "2026-02-02")) # FALSE
+is.ehars_dt <- function(x) {
+  all(stringr::str_detect(x, "^[0-9\\.]{8}$"))
+}
+
 #'Convert eHARS-style dates from character to date values
 #'
 #'@description Convert eHARS-style dates ('YYYYMMDD' with missing

@@ -12,13 +12,13 @@ ehars_root_dir <- function() {
 #'
 #' @param ... Optional parameters passed to haven::read_sas()
 #'
-#' @returns a data.frame
+#' @returns a data frame
 #' @export
 #'
 #' @examples
-#' ehars_person(n_max = 10, col_select = c("stateno", "hiv_aids_dx_dt", "trans_categ"))
+#' read_ehars_person(n_max = 10, col_select = c("stateno", "hiv_aids_dx_dt", "trans_categ"))
 
-ehars_person <- function(...) {
+read_ehars_person <- function(...) {
   haven::read_sas(
     data_file = file.path(
       ehars_root_dir(),
@@ -42,10 +42,10 @@ ehars_person <- function(...) {
 #' @export
 #'
 #' @examples
-#'ehars_doc("document", n_max = 10)
-#'ehars_doc("document", n_max = 10, col_select = c("ehars_uid", "document_uid", "document_type_cd", "enter_dt"))
+#'read_ehars_doc("document", n_max = 10)
+#'read_ehars_doc("document", n_max = 10, col_select = c("ehars_uid", "document_uid", "document_type_cd", "enter_dt"))
 
-ehars_doc <- function(tbl, ...) {
+read_ehars_doc <- function(tbl, ...) {
   haven::read_sas(
     data_file = file.path(
       ehars_root_dir(),

@@ -1,3 +1,17 @@
+test_that("eHARS dates correctly identified", {
+  expect_equal(
+    is.ehars_dt(c("20260101", "202601..", "2026....", "........", "20260..1")),
+    TRUE
+  )
+})
+
+test_that("dates not formatted as eHARS dates correctly identified", {
+  expect_equal(
+    is.ehars_dt("2026-01-01"),
+    FALSE
+  )
+})
+
 test_that("conversion of complete dates works", {
   expect_equal(ehars_dt.as.Date("20191231"), as.Date("2019-12-31"))
 })
