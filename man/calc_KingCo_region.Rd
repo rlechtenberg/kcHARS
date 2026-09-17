@@ -10,19 +10,19 @@ calc_KingCo_region(
   zip_cd_var,
   county_name_var,
   state_cd_var,
-  hml_var = NULL
+  hml_var = NA_character_
 )
 }
 \arguments{
 \item{df}{A data frame}
 
-\item{region_var}{(unquoted) name of the output variable specifying region of King County}
+\item{region_var}{quoted name of the output variable specifying region of King County}
 
-\item{zip_cd_var}{(unquoted) name of the variable specifying zip code of residence; can be >5 digits but only the first five are used}
+\item{zip_cd_var}{quoted name of the variable specifying zip code of residence; can be >5 digits but only the first five are used}
 
-\item{county_name_var}{(unquoted) name of the variable specifying county of residence (e.g., 'King Co.')}
+\item{county_name_var}{quoted name of the variable specifying county of residence (e.g., 'King Co.')}
 
-\item{state_cd_var}{(unquoted) name of the variable specifying the 2-letter code of the state of residence (e.g., 'WA')}
+\item{state_cd_var}{quoted name of the variable specifying the 2-letter code of the state of residence (e.g., 'WA')}
 
 \item{hml_var}{optional 0/1 indicator for whether the person was homeless/unstably housed (H/UH); if specified, H/UH appear in their own category}
 }
@@ -33,5 +33,5 @@ Input data frame \code{df} with the addition of region_var
 Calculate King County region
 }
 \examples{
-read_ehars_person(col_select = c()) |> calc_KingCo_region(res_region_inc, rsd_zip_cd, rsd_county_name, rsd_state_cd) |>  View()
+read_ehars_person(col_select = c()) |> calc_KingCo_region(region_var = "res_region_inc", zip_cd_var = "rsd_zip_cd", county_name_var = "rsd_county_name", state_cd_var = "rsd_state_cd") |>  View()
 }

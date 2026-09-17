@@ -441,27 +441,238 @@ calc_trans_categ <- function(df) {
 #' Calculate King County region
 #'
 #' @param df A data frame
-#' @param region_var (unquoted) name of the output variable specifying region of King County
-#' @param zip_cd_var (unquoted) name of the variable specifying zip code of residence; can be >5 digits but only the first five are used
-#' @param county_name_var (unquoted) name of the variable specifying county of residence (e.g., 'King Co.')
-#' @param state_cd_var (unquoted) name of the variable specifying the 2-letter code of the state of residence (e.g., 'WA')
+#' @param region_var quoted name of the output variable specifying region of King County
+#' @param zip_cd_var quoted name of the variable specifying zip code of residence; can be >5 digits but only the first five are used
+#' @param county_name_var quoted name of the variable specifying county of residence (e.g., 'King Co.')
+#' @param state_cd_var quoted name of the variable specifying the 2-letter code of the state of residence (e.g., 'WA')
 #' @param hml_var optional 0/1 indicator for whether the person was homeless/unstably housed (H/UH); if specified, H/UH appear in their own category
 #'
 #' @returns Input data frame `df` with the addition of region_var
 #' @export
 #'
 #' @examples
-#' read_ehars_person(col_select = c()) |> calc_KingCo_region(res_region_inc, rsd_zip_cd, rsd_county_name, rsd_state_cd) |>  View()
+#' read_ehars_person(col_select = c()) |> calc_KingCo_region(region_var = "res_region_inc", zip_cd_var = "rsd_zip_cd", county_name_var = "rsd_county_name", state_cd_var = "rsd_state_cd") |>  View()
 calc_KingCo_region <- function(
   df,
   region_var,
   zip_cd_var,
   county_name_var,
   state_cd_var,
-  hml_var = NULL
+  hml_var = NA_character_
 ) {
-  # stopifnot()
-  # "\\kc\dph\Prevention\HIV\Epi\surv\EOQ\EOQ_append\EOQ Zip Category.csv"
-  # df |>
-  #   mutate()
+  stopifnot(is.data.frame(df))
+
+  stopifnot(
+    is.character(region_var) &
+      length(region_var) == 1 &
+      !is.na(region_var)
+  )
+  stopifnot(
+    is.character(zip_cd_var) &
+      length(zip_cd_var) == 1 &
+      !is.na(zip_cd_var)
+  )
+  stopifnot(
+    is.character(county_name_var) &
+      length(county_name_var) == 1 &
+      !is.na(county_name_var)
+  )
+  stopifnot(
+    is.character(state_cd_var) &
+      length(state_cd_var) == 1 &
+      !is.na(state_cd_var)
+  )
+
+  stopifnot(
+    is.character(hml_var) &
+      length(hml_var) == 1
+  )
+
+  stopifnot(all(c(zip_cd_var, county_name_var, state_cd_var) %in% names(df)))
+  if (!is.na(hml_var)) {
+    stopifnot(all(hml_var %in% names(df)))
+  }
+
+  stopifnot(all(
+    unique(df[[zip_cd_var]]) |> stringr::str_detect("([0-9]{5})|()")
+  ))
+  stopifnot(all(
+    unique(df[[county_name_var]]) |> stringr::str_detect("(.+ CO\\.)|()")
+  ))
+  stopifnot(all(
+    unique(df[[state_cd_var]]) |> stringr::str_detect("([A-Z]{2})|()")
+  ))
+  if (!is.na(hml_var)) {
+    stopifnot(all(unique(df[[hml_var]]) %in% c(0, 1, NA_integer_)))
+  }
+
+  y <- df |>
+    # calc temporary 5-digit zip code to join on
+    dplyr::mutate(
+      tmp_calc_zipcode = .data[[zip_cd_var]] |>
+        stringr::str_trim() |>
+        stringr::str_sub(1, 5)
+    )
+
+  # if `hml_var` argument not supplied, create one and set to 0 (effectively
+  # treating everybody as housed and so ignoring 'homeless' as a category)
+  if (is.na(hml_var)) {
+    y <- y |>
+      dplyr::mutate(tmp_calc_hml = 0)
+
+    hml_var <- "tmp_calc_hml"
+  }
+
+  zip_region_xwalk <- read.csv(
+    "//kc/dph/Prevention/HIV/Epi/surv/EOQ/EOQ_append/EOQ Zip Category.csv"
+  ) |>
+    dplyr::transmute(
+      zipcode = zipcode |>
+        as.character() |>
+        stringr::str_sub(1, 5),
+      tmp_calc_region = KC_reside
+    )
+
+  y <- y |>
+    dplyr::left_join(
+      zip_region_xwalk,
+      by = dplyr::join_by(tmp_calc_zipcode == zipcode)
+    ) |>
+    dplyr::mutate(
+      !!rlang::sym(paste0(region_var, "_ZIP_ONLY")) := tmp_calc_region
+    )
+
+  # make adjustments to classification based on zip alone
+  y <- y |>
+    dplyr::mutate(
+      tmp_calc_region = tmp_calc_region |>
+        dplyr::replace_when(
+          .data[[hml_var]] == 1 &
+            .data[[county_name_var]] ==
+              'KING CO.' ~ 'Unstably housed in King Co.',
+          .data[[county_name_var]] == 'KING CO.' &
+            tmp_calc_region %in%
+              c(
+                'Other - WA', # where a zip overlaps King and another county, the crosswalk maps it to King Co.; so this mismatch only occurs when the data in eHARS are erroneous; assume the county_name_var is right (and zip_cd_var is wrong) and defer to that
+                'Removed', #used for zips that don't acually exist (crosswalk based on a zip list that included some bad data)
+                'Retired' # used for old zips (no longer exist, and unclear what the boundaries were so don't know which region to put in)
+              ) ~ 'z - Unknown (King County)'
+        )
+    )
+
+  # more adjustments
+  if (stringr::str_detect(zip_cd_var, "n_PLWA_")) {
+    y <- y |>
+      dplyr::mutate(
+        tmp_calc_region = tmp_calc_region |>
+          dplyr::replace_when(
+            dplyr::coalesce(tmp_calc_region, "") == "" &
+              dplyr::coalesce(.data[[state_cd_var]], "") != 'WA' ~ 'z - OOS'
+          )
+      )
+  } else {
+    y <- y |>
+      dplyr::mutate(
+        tmp_calc_region = dplyr::if_else(
+          condition = dplyr::coalesce(tmp_calc_region, "") == "",
+          true = tmp_calc_region |>
+            dplyr::replace_when(
+              dplyr::coalesce(.data[[state_cd_var]], "") == '' ~ 'z-Unknown',
+              .data[[state_cd_var]] == 'FC' ~ 'z - Out of country',
+              .data[[state_cd_var]] != 'WA' ~ 'z - OOS'
+            ),
+          false = tmp_calc_region
+        )
+      )
+  }
+
+  # final adjustments
+  y <- y |>
+    dplyr::mutate(
+      tmp_calc_region = dplyr::if_else(
+        condition = dplyr::coalesce(tmp_calc_region, "") == "" &
+          .data[[state_cd_var]] == "WA",
+        true = dplyr::case_when(
+          !dplyr::coalesce(.data[[county_name_var]], "") %in%
+            c('', 'KING CO.') ~ "Other - WA",
+          .data[[county_name_var]] == 'KING CO.' ~ "z - Unknown (King County)",
+          TRUE ~ 'z-Unknown'
+        ),
+        false = tmp_calc_region
+      )
+    )
+
+  # apply value labels and preliminary variable label
+  y <- y |>
+    dplyr::mutate(
+      tmp_calc_region = tmp_calc_region |>
+        labelled::labelled(
+          labels = c(
+            'Seattle' = 'Central Seattle / Downtown',
+            'Seattle' = 'N West Seattle ( Queen Anne, Magnolia)',
+            'Seattle' = 'Seattle Central',
+            'Seattle' = 'Seattle North',
+            'Seattle' = 'Seattle South',
+            'Seattle' = 'Seattle West',
+            'Seattle' = 'West Seattle/Vashon Island',
+            'South King County' = 'KC South',
+            'East King County' = 'KC East',
+            'North King County' = 'KC North',
+            'Outside of King County' = 'Other - WA'
+          )
+        ) |>
+        labelled::set_variable_labels("Region of Residence")
+    )
+
+  # change name of output var to that specified by user and drop temp zip var
+  y <- y |>
+    dplyr::select(-tmp_calc_zipcode) |>
+    dplyr::rename(!!rlang::sym(region_var) := tmp_calc_region)
+
+  if (hml_var == "tmp_calc_hml") {
+    y <- y |>
+      dplyr::select(-tmp_calc_hml)
+  }
+
+  return(y)
 }
+
+# df <- read_ehars_person(
+#   col_select = c(rsd_zip_cd, rsd_county_name, rsd_state_cd)
+# )
+# region_var = "res_region_inc"
+# zip_cd_var = "rsd_zip_cd"
+# county_name_var = "rsd_county_name"
+# state_cd_var = "rsd_state_cd"
+# hml_var = NA_character_
+
+# read_ehars_person(col_select = c(rsd_zip_cd, rsd_county_name, rsd_state_cd)) |>
+#   calc_KingCo_region(
+#     region_var = "res_region_inc",
+#     zip_cd_var = "rsd_zip_cd",
+#     county_name_var = "rsd_county_name",
+#     state_cd_var = "rsd_state_cd"
+#   ) |>
+#   View()
+#
+# read_ehars_person(col_select = c(rsd_zip_cd, rsd_county_name, rsd_state_cd)) |>
+#   dplyr::mutate(rsd_hml = 1) |>
+#   calc_KingCo_region(
+#     region_var = "res_region_inc",
+#     zip_cd_var = "rsd_zip_cd",
+#     county_name_var = "rsd_county_name",
+#     state_cd_var = "rsd_state_cd",
+#     hml_var = "rsd_hml"
+#   ) |>
+#   View()
+#
+#
+# data.frame(x = c(letters[1:5], NA_character_, letters[6:10])) |>
+#   dplyr::rowwise() |>
+#   dplyr::mutate(
+#     y = paste(rep(x, 3), collapse = ""),
+#     y = y |>
+#       dplyr::replace_when(
+#         dplyr::coalesce(y, "") == "" ~ "XXXXX"
+#       )
+#   )
