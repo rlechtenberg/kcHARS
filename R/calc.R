@@ -451,7 +451,23 @@ calc_trans_categ <- function(df) {
 #' @export
 #'
 #' @examples
-#' read_ehars_person(col_select = c()) |> calc_KingCo_region(region_var = "res_region_inc", zip_cd_var = "rsd_zip_cd", county_name_var = "rsd_county_name", state_cd_var = "rsd_state_cd") |>  View()
+#' read_eoq_append(
+#'   date = "2026-07-01",
+#'   col_select = c(
+#'       rsd_zip_cd,
+#'       rsd_county_name,
+#'       rsd_state_cd,
+#'       rsd_unstably_housed
+#'     )
+#'   ) |>
+#'   calc_KingCo_region(
+#'      region_var = "res_region_inc",
+#'      zip_cd_var = "rsd_zip_cd",
+#'      county_name_var = "rsd_county_name",
+#'      state_cd_var = "rsd_state_cd"
+#'      hml_var = "rsd_unstably_housed"
+#'      ) |>
+#'    View()
 calc_KingCo_region <- function(
   df,
   region_var,
@@ -461,12 +477,12 @@ calc_KingCo_region <- function(
   hml_var = NA_character_
 ) {
   stopifnot(is.data.frame(df))
-
-  stopifnot(
-    is.character(region_var) &
-      length(region_var) == 1 &
-      !is.na(region_var)
-  )
+  eoq_append <-
+    stopifnot(
+      is.character(region_var) &
+        length(region_var) == 1 &
+        !is.na(region_var)
+    )
   stopifnot(
     is.character(zip_cd_var) &
       length(zip_cd_var) == 1 &

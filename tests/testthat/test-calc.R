@@ -287,82 +287,82 @@ test_that("calc_KingCo_region() calculations work", {
   # see_diffs(varname = "res_region_prev", pattern = "n_PLWA_.+")
   # see_diffs(varname = "res_region_dth", pattern = "rad_.+")
 
-  x <- rbind(
-    output |>
-      dplyr::transmute(
-        state_cd = rsd_state_cd,
-        county_name = rsd_county_name,
-        zip_cd = rsd_zip_cd,
-        hml = rsd_unstably_housed,
-        region = res_region_inc,
-        region_adjusted = ifelse(
-          res_region_inc != res_region_inc_ZIP_ONLY,
-          'X',
-          ''
-        ),
-        region_ZIP_ONLY = ifelse(
-          region_adjusted == 'X',
-          res_region_inc_ZIP_ONLY,
-          ''
-        )
-      ),
-    output |>
-      dplyr::transmute(
-        state_cd = rad_state_cd,
-        county_name = rad_county_name,
-        zip_cd = rad_zip_cd,
-        hml = rad_unstably_housed,
-        region = res_region_dth,
-        region_adjusted = ifelse(
-          res_region_dth != res_region_dth_ZIP_ONLY,
-          'X',
-          ''
-        ),
-        region_ZIP_ONLY = ifelse(
-          region_adjusted == 'X',
-          res_region_dth_ZIP_ONLY,
-          ''
-        )
-      ),
-    output |>
-      dplyr::transmute(
-        state_cd = n_PLWA_state2025,
-        county_name = n_PLWA_cnty2025,
-        zip_cd = n_PLWA_zip2025,
-        hml = unstably_housed_2025,
-        region = res_region_prev,
-        region_adjusted = ifelse(
-          res_region_prev != res_region_prev_ZIP_ONLY,
-          'X',
-          ''
-        ),
-        region_ZIP_ONLY = ifelse(
-          region_adjusted == 'X',
-          res_region_prev_ZIP_ONLY,
-          ''
-        )
-      )
-  ) |>
-    # abstract state, county, and zip into meaningfully different higher-level
-    # categories to facilitate review
-    dplyr::mutate(
-      state_cd = state_cd |>
-        dplyr::recode_values(
-          '' ~ NA_character_,
-          'WA' ~ 'WA',
-          'FC' ~ 'Other Country',
-          default = 'non-WA'
-        ),
-      county_name = county_name |>
-        dplyr::recode_values(
-          '' ~ NA_character_,
-          'KING CO.' ~ 'KING CO.',
-          default = 'non-KING CO.'
-        ),
-      zip_cd = zip_cd |>
-        stringr::str_replace_all(pattern = "[0-9]", '#')
-    ) |>
-    dplyr::reframe(.by = dplyr::everything(), n = dplyr::n())
+  # x <- rbind(
+  #   output |>
+  #     dplyr::transmute(
+  #       state_cd = rsd_state_cd,
+  #       county_name = rsd_county_name,
+  #       zip_cd = rsd_zip_cd,
+  #       hml = rsd_unstably_housed,
+  #       region = res_region_inc,
+  #       region_adjusted = ifelse(
+  #         res_region_inc != res_region_inc_ZIP_ONLY,
+  #         'X',
+  #         ''
+  #       ),
+  #       region_ZIP_ONLY = ifelse(
+  #         region_adjusted == 'X',
+  #         res_region_inc_ZIP_ONLY,
+  #         ''
+  #       )
+  #     ),
+  #   output |>
+  #     dplyr::transmute(
+  #       state_cd = rad_state_cd,
+  #       county_name = rad_county_name,
+  #       zip_cd = rad_zip_cd,
+  #       hml = rad_unstably_housed,
+  #       region = res_region_dth,
+  #       region_adjusted = ifelse(
+  #         res_region_dth != res_region_dth_ZIP_ONLY,
+  #         'X',
+  #         ''
+  #       ),
+  #       region_ZIP_ONLY = ifelse(
+  #         region_adjusted == 'X',
+  #         res_region_dth_ZIP_ONLY,
+  #         ''
+  #       )
+  #     ),
+  #   output |>
+  #     dplyr::transmute(
+  #       state_cd = n_PLWA_state2025,
+  #       county_name = n_PLWA_cnty2025,
+  #       zip_cd = n_PLWA_zip2025,
+  #       hml = unstably_housed_2025,
+  #       region = res_region_prev,
+  #       region_adjusted = ifelse(
+  #         res_region_prev != res_region_prev_ZIP_ONLY,
+  #         'X',
+  #         ''
+  #       ),
+  #       region_ZIP_ONLY = ifelse(
+  #         region_adjusted == 'X',
+  #         res_region_prev_ZIP_ONLY,
+  #         ''
+  #       )
+  #     )
+  # ) |>
+  #   # abstract state, county, and zip into meaningfully different higher-level
+  #   # categories to facilitate review
+  #   dplyr::mutate(
+  #     state_cd = state_cd |>
+  #       dplyr::recode_values(
+  #         '' ~ NA_character_,
+  #         'WA' ~ 'WA',
+  #         'FC' ~ 'Other Country',
+  #         default = 'non-WA'
+  #       ),
+  #     county_name = county_name |>
+  #       dplyr::recode_values(
+  #         '' ~ NA_character_,
+  #         'KING CO.' ~ 'KING CO.',
+  #         default = 'non-KING CO.'
+  #       ),
+  #     zip_cd = zip_cd |>
+  #       stringr::str_replace_all(pattern = "[0-9]", '#')
+  #   ) |>
+  #   dplyr::reframe(.by = dplyr::everything(), n = dplyr::n())
 
   # View(x)
 })
