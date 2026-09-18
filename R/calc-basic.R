@@ -210,26 +210,32 @@ calc_nativity <- function(df) {
             "400", # Palmyra Atoll
             "450" # Wake Island
           ) ~ 1,
-        is.na(birth_country_cd) | birth_country_cd %in% c("", "X99") ~ 99,
+        is.na(birth_country_cd) |
+          birth_country_cd %in% c("", "X99") ~ NA_integer_,
         TRUE ~ 0
       ) |>
         labelled::labelled(
-          labels = c("U.S.-born" = 1, "Foreign-Born" = 0, "Unknown" = 99)
+          labels = c(
+            "U.S.-born" = 1,
+            "Foreign-Born" = 0,
+            "Unknown" = NA_integer_
+          )
         ) |>
         labelled::set_variable_labels("Nativity")
     )
 }
 
-#' Calculate age groups at diagnosis and currently
+#'Calculate age groups at diagnosis and currently
 #'
-#' @param df A data.frame containing (at least) eHARS variables
-#'   `hiv_aids_age_yrs` and dob
-#' @param cur_age_as_of A Date value specifying the date as of to calculate each
-#'   person's "current" age
+#'@param df A data.frame containing (at least) eHARS variables
+#'  `hiv_aids_age_yrs` and dob
+#'@param cur_age_as_of A Date value specifying the date as of which to calculate
+#'  each person's "current" age. Defaults to the date associated with the eHARS
+#'  data being used.
 #'
-#' @returns Input data frame `df` with the addition of variables
-#'   `hiv_aids_age_group` and `cur_age_group`
-#' @export
+#'@returns Input data frame `df` with the addition of variables
+#'  `hiv_aids_age_group` and `cur_age_group`
+#'@export
 #'
 #' @examples
 #'read_ehars_person(col_select = c(dob, hiv_aids_age_yrs)) |> calc_age_groups() |> View()
@@ -239,6 +245,7 @@ calc_age_groups <- function(
 ) {
   stopifnot(all(c("dob", "hiv_aids_age_yrs") %in% names(df)))
   stopifnot(is.ehars_dt(df[["dob"]]))
+  stopifnot(class(cur_age_as_of) == "Date")
 
   df |>
     dplyr::mutate(
@@ -272,9 +279,9 @@ calc_age_groups <- function(
         TRUE ~ "75+"
       ) |>
         labelled::set_variable_labels(paste0(
-          "Current Age in Years (as of ",
+          "Age on ",
           format(cur_age_as_of, format = "%m/%d/%Y"),
-          ")"
+          " (years)"
         ))
     ) |> # drop temp vars
     dplyr::select(-c(tmp_hiv_aids_age_yrs_int, tmp_dob_num, tmp_cur_age_int))
@@ -330,17 +337,6 @@ calc_trans_categ <- function(df) {
         '99' # - Risk factors selected with no age at diagnosis
       )
   ))
-
-  trans_categ_labels <- c(
-    '1MSM' = 'MSM',
-    '2IDU' = 'PWID',
-    '3MSM/IDU' = 'MSM and PWID',
-    '4Hetero' = 'Heterosexual Sexual Contact',
-    '6Peri' = 'Perinatal',
-    '5Blood' = 'Transfusion/Transplant',
-    '7NRR' = 'No Identified Risk',
-    '7Other' = 'Other'
-  )
 
   y <- df |>
     dplyr::mutate(
@@ -407,7 +403,20 @@ calc_trans_categ <- function(df) {
           ),
         TRUE ~ tmp_trans_categ
       ) |>
-        labelled::labelled(labels = c(trans_categ_labels)) |>
+        labelled::labelled(
+          labels = c(
+            'MSM' = '1MSM',
+            'PWID' = '2IDU',
+            'MSM and PWID' = '3MSM/IDU',
+            'Heterosexual Sexual Contact' = '4Hetero',
+            'Perinatal' = '6Peri',
+            'Transfusion/Transplant' = '5Blood',
+            'Other' = '7Other',
+            'No Identified Risk' = '7NRR',
+            'Transgender Woman (all transmission categories)' = '8TRANS',
+            'Another Gender Identity (all transmission categories)' = '9AD'
+          )
+        ) |>
         labelled::set_variable_labels("Transmission Category") |>
         Misc.SHH.f::set_notes_attr(
           "calculated from eHARS' trans_categ, with some categories collapsed\n-Ciswomen who endorse sex with males and deny IDU are reclassified as 'hetero'\n-transWOMEN and people who identify with an additional gender identity ('AD') are classified in their own categories and transMEN are classified into MSM, MSM/IDU, and hetero categories depending as appropriate"
@@ -546,75 +555,38 @@ calc_KingCo_region <- function(
       zipcode = zipcode |>
         as.character() |>
         stringr::str_sub(1, 5),
-      tmp_calc_region = KC_reside
+      tmp_map_region_zip = KC_reside
     )
 
   y <- y |>
     dplyr::left_join(
       zip_region_xwalk,
       by = dplyr::join_by(tmp_calc_zipcode == zipcode)
-    ) |>
-    dplyr::mutate(
-      !!rlang::sym(paste0(region_var, "_ZIP_ONLY")) := tmp_calc_region
     )
 
   # make adjustments to classification based on zip alone
+
   y <- y |>
     dplyr::mutate(
-      tmp_calc_region = tmp_calc_region |>
-        dplyr::replace_when(
-          .data[[hml_var]] == 1 &
-            .data[[county_name_var]] ==
-              'KING CO.' ~ 'Unstably housed in King Co.',
-          .data[[county_name_var]] == 'KING CO.' &
-            tmp_calc_region %in%
-              c(
-                'Other - WA', # where a zip overlaps King and another county, the crosswalk maps it to King Co.; so this mismatch only occurs when the data in eHARS are erroneous; assume the county_name_var is right (and zip_cd_var is wrong) and defer to that
-                'Removed', #used for zips that don't acually exist (crosswalk based on a zip list that included some bad data)
-                'Retired' # used for old zips (no longer exist, and unclear what the boundaries were so don't know which region to put in)
-              ) ~ 'z - Unknown (King County)'
-        )
-    )
-
-  # more adjustments
-  if (stringr::str_detect(zip_cd_var, "n_PLWA_")) {
-    y <- y |>
-      dplyr::mutate(
-        tmp_calc_region = tmp_calc_region |>
-          dplyr::replace_when(
-            dplyr::coalesce(tmp_calc_region, "") == "" &
-              dplyr::coalesce(.data[[state_cd_var]], "") != 'WA' ~ 'z - OOS'
-          )
-      )
-  } else {
-    y <- y |>
-      dplyr::mutate(
-        tmp_calc_region = dplyr::if_else(
-          condition = dplyr::coalesce(tmp_calc_region, "") == "",
-          true = tmp_calc_region |>
-            dplyr::replace_when(
-              dplyr::coalesce(.data[[state_cd_var]], "") == '' ~ 'z-Unknown',
-              .data[[state_cd_var]] == 'FC' ~ 'z - Out of country',
-              .data[[state_cd_var]] != 'WA' ~ 'z - OOS'
-            ),
-          false = tmp_calc_region
-        )
-      )
-  }
-
-  # final adjustments
-  y <- y |>
-    dplyr::mutate(
-      tmp_calc_region = dplyr::if_else(
-        condition = dplyr::coalesce(tmp_calc_region, "") == "" &
-          .data[[state_cd_var]] == "WA",
-        true = dplyr::case_when(
-          !dplyr::coalesce(.data[[county_name_var]], "") %in%
-            c('', 'KING CO.') ~ "Other - WA",
-          .data[[county_name_var]] == 'KING CO.' ~ "z - Unknown (King County)",
-          TRUE ~ 'z-Unknown'
-        ),
-        false = tmp_calc_region
+      tmp_calc_region = dplyr::case_when(
+        .data[[state_cd_var]] == '' |
+          is.na(.data[[state_cd_var]]) ~ 'z-Unknown',
+        .data[[state_cd_var]] == "FC" ~ 'z - Out of country',
+        .data[[state_cd_var]] != 'WA' ~ 'z - OOS',
+        .data[[county_name_var]] == '' |
+          is.na(.data[[county_name_var]]) ~ 'z-Unknown (WA)',
+        .data[[county_name_var]] |> stringr::str_remove_all("\\*") !=
+          'KING CO.' ~ 'Other - WA',
+        .data[[hml_var]] == 1 ~ 'Unstably housed in King Co.',
+        tmp_map_region_zip == '' |
+          is.na(tmp_map_region_zip) |
+          tmp_map_region_zip %in%
+            c(
+              'Other - WA', # where a zip overlaps King and another county, the crosswalk maps it to King Co.; so this mismatch only occurs when the data in eHARS are erroneous; assume the county_name_var is right (and zip_cd_var is wrong) and defer to that
+              'Removed', #used for zips that don't acually exist (crosswalk based on a zip list that included some bad data)
+              'Retired' # used for old zips (no longer exist, and unclear what the boundaries were so don't know which region to put in)
+            ) ~ 'z - Unknown (King County)',
+        TRUE ~ tmp_map_region_zip
       )
     )
 
@@ -634,7 +606,13 @@ calc_KingCo_region <- function(
             'South King County' = 'KC South',
             'East King County' = 'KC East',
             'North King County' = 'KC North',
-            'Outside of King County' = 'Other - WA'
+            "Homeless or Unstably Housed" = "Unstably Housed in King Co.",
+            "Unknown Region of King County" = "z - Unknown (King County)",
+            "In Washington State, Outside King County" = "Other - WA",
+            "Unknown County in Washington State" = "z-Unknown (WA)",
+            "Out of State" = "z - OOS",
+            "Out of Country" = "z - Out of country",
+            "Unknown" = "z-Unknown"
           )
         ) |>
         labelled::set_variable_labels("Region of Residence")
@@ -642,7 +620,7 @@ calc_KingCo_region <- function(
 
   # change name of output var to that specified by user and drop temp zip var
   y <- y |>
-    dplyr::select(-tmp_calc_zipcode) |>
+    dplyr::select(-tmp_calc_zipcode, -tmp_map_region_zip) |>
     dplyr::rename(!!rlang::sym(region_var) := tmp_calc_region)
 
   if (hml_var == "tmp_calc_hml") {
@@ -652,43 +630,3 @@ calc_KingCo_region <- function(
 
   return(y)
 }
-
-# df <- read_ehars_person(
-#   col_select = c(rsd_zip_cd, rsd_county_name, rsd_state_cd)
-# )
-# region_var = "res_region_inc"
-# zip_cd_var = "rsd_zip_cd"
-# county_name_var = "rsd_county_name"
-# state_cd_var = "rsd_state_cd"
-# hml_var = NA_character_
-
-# read_ehars_person(col_select = c(rsd_zip_cd, rsd_county_name, rsd_state_cd)) |>
-#   calc_KingCo_region(
-#     region_var = "res_region_inc",
-#     zip_cd_var = "rsd_zip_cd",
-#     county_name_var = "rsd_county_name",
-#     state_cd_var = "rsd_state_cd"
-#   ) |>
-#   View()
-#
-# read_ehars_person(col_select = c(rsd_zip_cd, rsd_county_name, rsd_state_cd)) |>
-#   dplyr::mutate(rsd_hml = 1) |>
-#   calc_KingCo_region(
-#     region_var = "res_region_inc",
-#     zip_cd_var = "rsd_zip_cd",
-#     county_name_var = "rsd_county_name",
-#     state_cd_var = "rsd_state_cd",
-#     hml_var = "rsd_hml"
-#   ) |>
-#   View()
-#
-#
-# data.frame(x = c(letters[1:5], NA_character_, letters[6:10])) |>
-#   dplyr::rowwise() |>
-#   dplyr::mutate(
-#     y = paste(rep(x, 3), collapse = ""),
-#     y = y |>
-#       dplyr::replace_when(
-#         dplyr::coalesce(y, "") == "" ~ "XXXXX"
-#       )
-#   )
