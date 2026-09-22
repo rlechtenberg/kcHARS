@@ -18,7 +18,11 @@ calc_gender <- function(
   stopifnot(n_cat %in% c(3, 5))
 
   # confirm input variables are in `df`
-  stopifnot(all(c('LF_TRANS', 'LF_GENDER', 'LF_GENDER_OTHER') %in% names(df)))
+  Misc.SHH.f::assert_vars_in_df(
+    df = df,
+    vars = c('LF_TRANS', 'LF_GENDER', 'LF_GENDER_OTHER')
+  )
+
   # need at least one of these; was `birth_sex` until eHARS v4.17, when renamed to `sex`
   stopifnot(any(c('birth_sex', 'sex') %in% names(df)))
 
@@ -119,9 +123,11 @@ calc_gender <- function(
 #' @examples
 #'read_ehars_person(col_select = c(matches("race[0-9]"), all_of(c("ethnicity1")))) |> dplyr::distinct() |> calc_race_eth_vars() |> View()
 calc_race_eth_vars <- function(df) {
-  stopifnot(all(
-    c('race1', 'race2', 'race3', 'race4', 'race5', 'ethnicity1') %in% names(df)
-  ))
+  Misc.SHH.f::assert_vars_in_df(
+    df = df,
+    vars = c('race1', 'race2', 'race3', 'race4', 'race5', 'ethnicity1')
+  )
+
   stopifnot(all(unique(df$ethnicity1) %in% c("E1", "E2", "UNK", '')))
   paste0("race", 1:5) |>
     purrr::map(.f = function(race_i) {
@@ -136,11 +142,11 @@ calc_race_eth_vars <- function(df) {
       natam_multi = ifelse(stringr::str_detect(races, "R1"), 1, 0) |>
         labelled::labelled(
           labels = c(
-            "Native American/Alaskan Native" = 1,
-            "Not Native American/Alaskan Native" = 0
+            "American Indian/Alaska Native" = 1,
+            "Not American Indian/Alaska Native" = 0
           )
         ) |>
-        labelled::set_variable_labels("Native American/Alaskan Native"),
+        labelled::set_variable_labels("American Indian/Alaska Native"),
       asian_multi = ifelse(stringr::str_detect(races, "R2"), 1, 0) |>
         labelled::labelled(labels = c("Asian" = 1, "Not Asian" = 0)) |>
         labelled::set_variable_labels("Asian"),
@@ -310,10 +316,10 @@ calc_age_groups <- function(
 #' ))
 #' ) |> distinct() |> calc_gender() |> calc_trans_categ() |> View()
 calc_trans_categ <- function(df) {
-  stopifnot(all(
-    c('trans_categ', 'sex', 'sex_male', 'sex_female', 'idu', 'gender') %in%
-      names(df)
-  ))
+  Misc.SHH.f::assert_vars_in_df(
+    df = df,
+    vars = c('trans_categ', 'sex', 'sex_male', 'sex_female', 'idu', 'gender')
+  )
 
   stopifnot(all(
     unique(df$trans_categ) %in%
@@ -513,7 +519,11 @@ calc_KingCo_region <- function(
       length(hml_var) == 1
   )
 
-  stopifnot(all(c(zip_cd_var, county_name_var, state_cd_var) %in% names(df)))
+  Misc.SHH.f::assert_vars_in_df(
+    df = df,
+    vars = c(zip_cd_var, county_name_var, state_cd_var)
+  )
+
   if (!is.na(hml_var)) {
     stopifnot(all(hml_var %in% names(df)))
   }
@@ -606,7 +616,7 @@ calc_KingCo_region <- function(
             'South King County' = 'KC South',
             'East King County' = 'KC East',
             'North King County' = 'KC North',
-            "Homeless or Unstably Housed" = "Unstably Housed in King Co.",
+            "Homeless or Unstably Housed" = "Unstably housed in King Co.",
             "Unknown Region of King County" = "z - Unknown (King County)",
             "In Washington State, Outside King County" = "Other - WA",
             "Unknown County in Washington State" = "z-Unknown (WA)",
