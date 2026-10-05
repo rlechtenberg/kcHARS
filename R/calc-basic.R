@@ -140,29 +140,14 @@ calc_race_eth_vars <- function(df) {
     dplyr::mutate(
       races = paste(race1, race2, race3, race4, race5), # calc concatenation of race vars to streamline the below
       natam_multi = ifelse(stringr::str_detect(races, "R1"), 1, 0) |>
-        labelled::labelled(
-          labels = c(
-            "American Indian/Alaska Native" = 1,
-            "Not American Indian/Alaska Native" = 0
-          )
-        ) |>
         labelled::set_variable_labels("American Indian/Alaska Native"),
       asian_multi = ifelse(stringr::str_detect(races, "R2"), 1, 0) |>
-        labelled::labelled(labels = c("Asian" = 1, "Not Asian" = 0)) |>
         labelled::set_variable_labels("Asian"),
       black_multi = ifelse(stringr::str_detect(races, "R3"), 1, 0) |>
-        labelled::labelled(labels = c("Black" = 1, "Not Black" = 0)) |>
         labelled::set_variable_labels("Black"),
       pacisl_multi = ifelse(stringr::str_detect(races, "R4"), 1, 0) |>
-        labelled::labelled(
-          labels = c(
-            "Native Hawaiian or Pacific Islander" = 1,
-            "Not Native Hawaiian or Pacific Islander" = 0
-          )
-        ) |>
         labelled::set_variable_labels("Native Hawaiian or Pacific Islander"),
       white_multi = ifelse(stringr::str_detect(races, "R5"), 1, 0) |>
-        labelled::labelled(labels = c("White" = 1, "Not White" = 0)) |>
         labelled::set_variable_labels("White"),
       latino = dplyr::if_else(
         ethnicity1 == "E1",
@@ -170,9 +155,6 @@ calc_race_eth_vars <- function(df) {
         0,
         missing = 0
       ) |>
-        labelled::labelled(
-          labels = c("Latinx or Hispanic" = 1, "Not Latinx or Hispanic" = 0)
-        ) |>
         labelled::set_variable_labels("Latinx or Hispanic"),
       races = NULL # drop it as no longer needed
     )
