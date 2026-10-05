@@ -8,22 +8,24 @@ ehars_root_dir <- function() {
   return("R:/Epi/EXTRA SPACE/eHARS/Full eHARS")
 }
 
-#' Read eHARS' person-based dataset (AKA the person view) into R
+#'Read eHARS' person-based dataset (AKA the person view) into R
 #'
-#' @param ... Optional parameters passed to haven::read_sas()
+#'#' @param date Date of eHARS data to read; optional and defaults to
+#'getOption("kcHARS.ehars_dt")
+#'@param ... Optional parameters passed to haven::read_sas()
 #'
-#' @returns a data frame
-#' @export
+#'@returns a data frame
+#'@export
 #'
 #' @examples
 #' read_ehars_person(n_max = 10, col_select = c("stateno", "hiv_aids_dx_dt", "trans_categ"))
 
-read_ehars_person <- function(...) {
+read_ehars_person <- function(date = getOption("kcHARS.ehars_dt"), ...) {
   haven::read_sas(
     data_file = file.path(
       ehars_root_dir(),
       "Archive",
-      getOption("kcHARS.ehars_dt"),
+      date,
       "person_sas7bdat",
       "person.sas7bdat"
     ),
@@ -36,6 +38,8 @@ read_ehars_person <- function(...) {
 #'
 #' @param tbl character value specifying the name of one of eHARS document-based
 #'   tables
+#' @param date Date of eHARS data to read; optional and defaults to
+#'getOption("kcHARS.ehars_dt")
 #' @param ... Optional parameters passed to haven::read_sas()
 #'
 #' @returns a data.frame
@@ -45,12 +49,12 @@ read_ehars_person <- function(...) {
 #'read_ehars_doc("document", n_max = 10)
 #'read_ehars_doc("document", n_max = 10, col_select = c("ehars_uid", "document_uid", "document_type_cd", "enter_dt"))
 
-read_ehars_doc <- function(tbl, ...) {
+read_ehars_doc <- function(tbl, date = getOption("kcHARS.ehars_dt"), ...) {
   haven::read_sas(
     data_file = file.path(
       ehars_root_dir(),
       "Archive",
-      getOption("kcHARS.ehars_dt"),
+      date,
       "document_sas7bdat",
       paste0(tbl, ".sas7bdat")
     ),

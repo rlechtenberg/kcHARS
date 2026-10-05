@@ -34,9 +34,9 @@ calc_gender <- function(
   }
 
   # confirm no unexpected values of LF_TRANS and LF_GENDER variables
-  stopifnot(all(unique(df$LF_TRANS) %in% c('MF', 'FM', 'OTHER', '')))
+  stopifnot(all(unique(df$LF_TRANS) %in% c('MF', 'FM', 'OTHER', '', NA)))
   stopifnot(all(
-    unique(df$LF_GENDER) %in% c('M', 'F', 'MF', 'FM', 'NB', 'GQ', 'O', '')
+    unique(df$LF_GENDER) %in% c('M', 'F', 'MF', 'FM', 'NB', 'GQ', 'O', '', NA)
   ))
 
   y <- df
@@ -128,11 +128,11 @@ calc_race_eth_vars <- function(df) {
     vars = c('race1', 'race2', 'race3', 'race4', 'race5', 'ethnicity1')
   )
 
-  stopifnot(all(unique(df$ethnicity1) %in% c("E1", "E2", "UNK", '')))
+  stopifnot(all(unique(df$ethnicity1) %in% c("E1", "E2", "UNK", '', NA)))
   paste0("race", 1:5) |>
     purrr::map(.f = function(race_i) {
       stopifnot(all(
-        unique(df[[race_i]]) %in% c("R1", "R2", 'R3', 'R4', 'R5', "UNK", '')
+        unique(df[[race_i]]) %in% c("R1", "R2", 'R3', 'R4', 'R5', "UNK", '', NA)
       ))
     })
 
@@ -340,7 +340,8 @@ calc_trans_categ <- function(df) {
         '18', # - Child with other confirmed risk
         '19', # - Child with no indentified risk (NIR)
         '20', # - Child with no reported risk (NRR)
-        '99' # - Risk factors selected with no age at diagnosis
+        '99', # - Risk factors selected with no age at diagnosis
+        NA
       )
   ))
 

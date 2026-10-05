@@ -4,11 +4,14 @@
 \alias{read_ehars_doc}
 \title{Read an eHARS document-based dataset (e.g., document, lab) into R}
 \usage{
-read_ehars_doc(tbl, ...)
+read_ehars_doc(tbl, date = getOption("kcHARS.ehars_dt"), ...)
 }
 \arguments{
 \item{tbl}{character value specifying the name of one of eHARS document-based
 tables}
+
+\item{date}{Date of eHARS data to read; optional and defaults to
+getOption("kcHARS.ehars_dt")}
 
 \item{...}{Optional parameters passed to haven::read_sas()}
 }
