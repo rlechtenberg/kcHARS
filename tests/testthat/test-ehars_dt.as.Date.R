@@ -18,6 +18,7 @@ test_that("conversion of complete dates works", {
 
 test_that("imputation works", {
   expect_equal(ehars_dt.as.Date("........"), as.Date(NA))
+  expect_equal(ehars_dt.as.Date(""), as.Date(NA))
 
   expect_equal(ehars_dt.as.Date("2019...."), as.Date("2019-06-30"))
   expect_equal(

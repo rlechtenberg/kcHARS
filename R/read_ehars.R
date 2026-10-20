@@ -10,7 +10,7 @@ ehars_root_dir <- function() {
 
 #'Read eHARS' person-based dataset (AKA the person view) into R
 #'
-#'#' @param date Date of eHARS data to read; optional and defaults to
+#'@param date Date of eHARS data to read; optional and defaults to
 #'getOption("kcHARS.ehars_dt")
 #'@param ... Optional parameters passed to haven::read_sas()
 #'

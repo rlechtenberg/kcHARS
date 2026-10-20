@@ -7,14 +7,16 @@
 read_ehars_person(date = getOption("kcHARS.ehars_dt"), ...)
 }
 \arguments{
+\item{date}{Date of eHARS data to read; optional and defaults to
+getOption("kcHARS.ehars_dt")}
+
 \item{...}{Optional parameters passed to haven::read_sas()}
 }
 \value{
 a data frame
 }
 \description{
-#' @param date Date of eHARS data to read; optional and defaults to
-getOption("kcHARS.ehars_dt")
+Read eHARS' person-based dataset (AKA the person view) into R
 }
 \examples{
 read_ehars_person(n_max = 10, col_select = c("stateno", "hiv_aids_dx_dt", "trans_categ"))

@@ -22,7 +22,7 @@ A vector of class \code{Date}
 \description{
 Convert eHARS-style dates ('YYYYMMDD' with missing
 day/month+day/date specified as '..'/'....'/'........') from character to
-date values. '........' are converted to NAs.
+date values. '........' and zero-length strings ('') are converted to NAs.
 }
 \examples{
 ehars_dt.as.Date("20191231")

@@ -19,7 +19,7 @@ is.ehars_dt <- function(x) {
 #'
 #'@description Convert eHARS-style dates ('YYYYMMDD' with missing
 #'  day/month+day/date specified as '..'/'....'/'........') from character to
-#'  date values. '........' are converted to NAs.
+#'  date values. '........' and zero-length strings ('') are converted to NAs.
 #'
 #'@param x A character vector of eHARS-style date values: 'YYYYMMDD' with
 #'  missing day/month+day/date specified as '..'/'....'/'........'.
@@ -46,7 +46,7 @@ ehars_dt.as.Date <- function(
   # validate inputs
   checkmate::assert_character(
     x,
-    pattern = "^(([0-9]{8})|([0-9]{6}\\.{2})|([0-9]{4}\\.{4})|(\\.{8}))$"
+    pattern = "(^(([0-9]{8})|([0-9]{6}\\.{2})|([0-9]{4}\\.{4})|(\\.{8}))$)|(^$)"
   )
 
   checkmate::assert_character(..to, pattern = "^[0-9]{2}$")
@@ -66,7 +66,8 @@ ehars_dt.as.Date <- function(
 
   # impute missing dateparts, if any
   x <- dplyr::case_when(
-    stringr::str_detect(x, pattern = "\\.{8}") ~ NA_character_,
+    stringr::str_detect(x, pattern = "\\.{8}") |
+      stringr::str_detect(x, pattern = "^$") ~ NA_character_,
     stringr::str_detect(x, pattern = "[0-9]{6}\\.{2}") ~ paste0(
       stringr::str_sub(x, 1, 6),
       ..to
