@@ -26,7 +26,6 @@ group_race_eth_multi_vars <- function(x) {
   stopifnot(all(class(x) == c("tbl_summary", "gtsummary")))
 
   race_eth_multi_vars <- c(
-    "black_multi",
     "natam_multi",
     "asian_multi",
     "black_multi",
@@ -45,8 +44,8 @@ group_race_eth_multi_vars <- function(x) {
     })
 
   y <- x |>
-    group_dichot_vars(
-      variables = c(race_eth_multi_vars),
+    Misc.SHH.f::group_dichot_vars(
+      vars = c(race_eth_multi_vars),
       header = "Race/Ethnicity"
     ) |>
     # add foonote

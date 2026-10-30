@@ -1,28 +1,45 @@
+# test_that("add_req_vars() works", {
+#   x <- read_ehars_person(col_select = c("stateno"))
+#   y <- add_req_vars(df = x, vars = c("race", "ethnicity1"))
+# })
+
 test_that("calc_gender() fails with bad inputs", {
-  expect_error(
+  expect_warning(
+    read_ehars_person(col_select = c(stateno)) |>
+      calc_gender()
+  )
+
+  expect_error(expect_warning(
+    read_ehars_person(
+      col_select = c(LF_TRANS, LF_GENDER, LF_GENDER_OTHER)
+    ) |>
+      calc_gender()
+  ))
+
+  expect_error(expect_warning(
     read_ehars_person(col_select = c(LF_TRANS, LF_GENDER, LF_GENDER_OTHER)) |>
       calc_gender()
-  )
+  ))
 
-  expect_error(
+  expect_error(expect_warning(
     read_ehars_person(col_select = c(sex, LF_GENDER, LF_GENDER_OTHER)) |>
       calc_gender()
-  )
+  ))
 
-  expect_error(
+  expect_error(expect_warning(
     read_ehars_person(col_select = c(sex, LF_TRANS, LF_GENDER_OTHER)) |>
       calc_gender()
-  )
+  ))
 
-  expect_error(
+  expect_error(expect_warning(
     read_ehars_person(col_select = c(sex, LF_TRANS, LF_GENDER)) |>
       calc_gender()
-  )
+  ))
 
-  expect_error(
+  expect_error(expect_warning(
     read_ehars_person(col_select = c(sex, LF_TRANS, LF_GENDER)) |>
       calc_gender(n_cat = 2)
-  )
+  ))
 
   expect_error(
     read_ehars_person(

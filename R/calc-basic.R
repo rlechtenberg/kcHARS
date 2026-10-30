@@ -1,3 +1,65 @@
+#' Ensure a data.frame includes all vars required for calculation
+#'
+#' If the input data.frame does not include the specified vars, this function
+#' joins them in from eHARS.
+#'
+#' @param df a data.frame
+#' @param vars a character vector listing the names of variables required in
+#'   `df`
+#'
+#' @returns `df` with the addition of any variables from among `vars` that
+#'   hadn't originally been included
+#'
+#' @examples
+#' x <- read_ehars_person(col_select = c("stateno"))
+#' names(x) # only stateno
+#' y <- add_req_vars(df = x, vars = c("race", "ethnicity1"))
+#' names(y) # stateno AND race and ethnicity1
+#' rm(x, y)
+add_req_vars <- function(df, vars) {
+  stopifnot(is.data.frame(df))
+  stopifnot(is.character(vars))
+
+  # identify the subset of `vars` not in `df`
+  vars_not_in_df <- setdiff(vars, names(df))
+
+  if (length(vars_not_in_df) > 0) {
+    # get name of calling function so can reference it in the warning
+    fun_name <- sys.call(-1)[[1]]
+
+    base_warning <- paste0(
+      'Var(s) ',
+      paste0(vars_not_in_df, collapse = ", "),
+      ' required by call to function `',
+      fun_name,
+      '` but absent from `df`.'
+    )
+
+    if ("stateno" %in% names(df)) {
+      # if any, warn user which eHARS dataset they'll be joined in from
+      warning(paste0(
+        base_warning,
+        ' Joining them in from eHARS person-based dataset dated ',
+        getOption("kcHARS.ehars_dt")
+      ))
+
+      # join them in
+      df <- df |>
+        dplyr::left_join(
+          read_ehars_person(col_select = any_of(c("stateno", vars_not_in_df))),
+          by = "stateno"
+        )
+    } else {
+      warning(paste0(
+        base_warning,
+        ' Cannot automatically join them in from eHARS as stateno is also absent from `df`.'
+      ))
+    }
+  }
+
+  return(df)
+}
+
 #' Calculate 3- or 5-category gender variable
 #'
 #' @param df A data frame containing (at least) eHARS variables sex/birth_sex,
@@ -16,6 +78,9 @@ calc_gender <- function(
   n_cat = 5 # 3 or 5
 ) {
   stopifnot(n_cat %in% c(3, 5))
+
+  df <- df |>
+    add_req_vars(vars = c('sex', 'LF_TRANS', 'LF_GENDER', 'LF_GENDER_OTHER'))
 
   # confirm input variables are in `df`
   Misc.SHH.f::assert_vars_in_df(
@@ -123,6 +188,10 @@ calc_gender <- function(
 #' @examples
 #'read_ehars_person(col_select = c(matches("race[0-9]"), all_of(c("ethnicity1")))) |> dplyr::distinct() |> calc_race_eth_vars() |> View()
 calc_race_eth_vars <- function(df) {
+  df <- df |>
+    add_req_vars(
+      vars = c('race1', 'race2', 'race3', 'race4', 'race5', 'ethnicity1')
+    )
   Misc.SHH.f::assert_vars_in_df(
     df = df,
     vars = c('race1', 'race2', 'race3', 'race4', 'race5', 'ethnicity1')
@@ -170,6 +239,7 @@ calc_race_eth_vars <- function(df) {
 #' @examples
 #'read_ehars_person(col_select = birth_country_cd) |> dplyr::distinct() |> calc_nativity() |> View()
 calc_nativity <- function(df) {
+  df <- df |> add_req_vars(vars = c('birth_country_cd'))
   stopifnot('birth_country_cd' %in% names(df))
 
   df |>
@@ -231,6 +301,7 @@ calc_age_groups <- function(
   df,
   cur_age_as_of = as.Date(getOption("kcHARS.ehars_dt"))
 ) {
+  df <- df |> add_req_vars(vars = c("dob", "hiv_aids_age_yrs"))
   stopifnot(all(c("dob", "hiv_aids_age_yrs") %in% names(df)))
   stopifnot(is.ehars_dt(df[["dob"]]))
   stopifnot(class(cur_age_as_of) == "Date")
@@ -298,6 +369,10 @@ calc_age_groups <- function(
 #' ))
 #' ) |> distinct() |> calc_gender() |> calc_trans_categ() |> View()
 calc_trans_categ <- function(df) {
+  df <- df |>
+    add_req_vars(
+      vars = c('trans_categ', 'sex', 'sex_male', 'sex_female', 'idu')
+    ) # NOTE: gender is a calculated variable
   Misc.SHH.f::assert_vars_in_df(
     df = df,
     vars = c('trans_categ', 'sex', 'sex_male', 'sex_female', 'idu', 'gender')
@@ -475,12 +550,12 @@ calc_KingCo_region <- function(
   hml_var = NA_character_
 ) {
   stopifnot(is.data.frame(df))
-  eoq_append <-
-    stopifnot(
-      is.character(region_var) &
-        length(region_var) == 1 &
-        !is.na(region_var)
-    )
+  df <- df |> add_req_vars(vars = c(zip_cd_var, county_name_var, state_cd_var))
+  stopifnot(
+    is.character(region_var) &
+      length(region_var) == 1 &
+      !is.na(region_var)
+  )
   stopifnot(
     is.character(zip_cd_var) &
       length(zip_cd_var) == 1 &
@@ -501,6 +576,7 @@ calc_KingCo_region <- function(
     is.character(hml_var) &
       length(hml_var) == 1
   )
+  df <- df |> add_req_vars(vars = c(zip_cd_var, county_name_var, state_cd_var))
 
   Misc.SHH.f::assert_vars_in_df(
     df = df,

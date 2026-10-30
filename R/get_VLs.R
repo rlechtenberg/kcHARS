@@ -224,7 +224,14 @@ get_VLs <- function(
           result_interpretation %in% c('<', '-ND') ~ missing_result,
         max_result_unimputed == -Inf ~ NA,
         TRUE ~ max_result_unimputed
-      ),
+      ) |>
+        Misc.SHH.f::set_notes_attr(
+          paste(
+            'Imputed as',
+            missing_result,
+            "when (1) the person's VL records for that date are *all* missing a value for result *and* (2) some have an interpretation of '<' or 'ND' and none have an interpretation of '>'"
+          )
+        ),
       max_result_unimputed = max_result_unimputed |>
         dplyr::replace_when(max_result_unimputed == -Inf ~ NA),
       result_interpretation = result_interpretation |>

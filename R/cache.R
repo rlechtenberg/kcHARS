@@ -18,6 +18,12 @@
 #'
 construct_cache_file_path <- function(n_frames_up = 1) {
   fun_name <- sys.call(-1 * n_frames_up)[[1]]
+  # fun_name is a language object that, depending on the execution context, may
+  # be qualified by the package name (i.e., kcHARS::function), in which case
+  # want just the function name, which will be the last element
+  if (length(fun_name) > 1) {
+    fun_name <- fun_name[[length(fun_name)]]
+  }
 
   # Capture the calling function's formals
   fun_formals <- formals(sys.function(-1 * n_frames_up))

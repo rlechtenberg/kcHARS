@@ -51,14 +51,15 @@ variables care_dt (Date), care_type (1+ of: 'VL', 'CD4 cnt', 'CD4 pct',
 document with this stateno + care_dt_char), document_uid (for documents
 with this stateno + care_dt_char, by care_type), and facility (for \emph{lab}
 documents with this stateno + care_dt_char).
-
-#' @details The cached dataset is stored in the "/Derived" subdirectory of
-the date-specific folder containing the eHARS datasets. If no such
-directory exists when this function is called, it creates it.
 }
 \description{
 Compile a list of documented dates of HIV care (labs and optionally
 care_nolab and/or ARV use)
+}
+\details{
+The cached dataset is stored in the "/Derived" subdirectory of the
+date-specific folder containing the eHARS datasets. If no such directory
+exists when this function is called, it creates it.
 }
 \examples{
 care_dts <- get_care_dts()
