@@ -27,4 +27,4 @@ Imports:
     rlang,
     stringr
 Remotes:
-    Misc.SHH.f=local:://kc/dph/Prevention/HIV/Epi/Richard/R/Packages/Misc.SHH.f
+    github::rlechtenberg/Misc.SHH.f
