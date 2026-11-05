@@ -39,7 +39,9 @@
 #' @importFrom data.table ":=" set fcase
 #'
 #' @examples
+#' if(FALSE){
 #' care_dts <- get_care_dts()
+#' }
 
 get_care_dts <- function(
   incl_care_nolab = TRUE,

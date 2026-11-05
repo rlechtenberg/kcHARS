@@ -5,7 +5,7 @@
 #' @export
 #'
 ehars_root_dir <- function() {
-  return("R:/Epi/EXTRA SPACE/eHARS/Full eHARS")
+  return("//kc/dph/prevention/hiv/Epi/EXTRA SPACE/eHARS/Full eHARS")
 }
 
 #'Read eHARS' person-based dataset (AKA the person view) into R

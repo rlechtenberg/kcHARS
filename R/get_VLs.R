@@ -29,7 +29,9 @@
 #' @importFrom data.table ":=" set fcase
 #'
 #' @examples
+#' if(FALSE){
 #' vls <- get_VLs()
+#' }
 
 get_VLs <- function(
   missing_result = 199,

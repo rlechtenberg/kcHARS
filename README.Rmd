@@ -36,7 +36,7 @@ pak::pak("rlechtenberg/kcHARS")
 
 ## Reading eHARS data into R 
 
-kcHARS assumes eHARS SAS datasets reside in "R:/Epi/EXTRA SPACE/eHARS/Full
+kcHARS assumes eHARS SAS datasets reside in "//KC/DPH/Prevention/HIV/Epi/EXTRA SPACE/eHARS/Full
 eHARS" (what `ehars_root_dir()` returns). Specifically, it assumes that the
 Archive/ subdirectory contains folders named 'YYYY-MM-DD', each
 containing an extract from a different date, and that each of those contains a

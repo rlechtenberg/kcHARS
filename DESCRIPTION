@@ -8,7 +8,7 @@ License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
-URL: https://github.com/rlechtenberg/kcHARS
+URL: https://github.com/rlechtenberg/kcHARS, https://rlechtenberg.github.io/kcHARS/
 BugReports: https://github.com/rlechtenberg/kcHARS/issues
 Suggests: 
     testthat (>= 3.0.0)
@@ -26,3 +26,5 @@ Imports:
     purrr,
     rlang,
     stringr
+Remotes:
+    Misc.SHH.f=local:://kc/dph/Prevention/HIV/Epi/Richard/R/Packages/Misc.SHH.f
